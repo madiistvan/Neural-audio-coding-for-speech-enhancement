@@ -108,7 +108,6 @@ class LatentTrainer:
             task, logger = self.create_task_and_logger(device)
             model.to(device)
 
-
             self.training_loop(device, model, train_loader, val_loader, logger, optimizer, num_epochs, model_save_handler, test_loader)
         
             torch.save(model.state_dict(), f'./saved_models/{date_string}')
