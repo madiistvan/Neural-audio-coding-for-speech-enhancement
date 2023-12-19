@@ -1,5 +1,5 @@
 from models.autoencoder.AudioDec import Encoder
-from EncoderDataset import EncoderDataset 
+from preprocessing.EncoderDataset import EncoderDataset 
 import soundfile as sf
 from torch.utils.data import DataLoader
 import os

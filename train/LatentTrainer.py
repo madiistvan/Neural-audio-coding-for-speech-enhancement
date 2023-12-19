@@ -52,6 +52,7 @@ class LatentTrainer:
 
         for epoch in range(NUM_EPOCHS):
             model.train()
+            losses = 0.0
             for noisy, target in train_loader:
                 noisy = noisy.to(device)
                 target = target.to(device)
@@ -59,11 +60,13 @@ class LatentTrainer:
                 
                 pred = model(noisy.squeeze(1))
                 loss = criterion(pred, target.squeeze(1))
+                losses += loss
                 loss.backward()
                 optimizer.step()
 
-            print(f'Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {loss.item():.4f}')
-            self.log_scalar(logger, loss.item(), epoch)
+            avg_loss = losses = len(train_loader)
+            print(f'Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {avg_loss:.4f}')
+            self._log_scalar(logger, avg_loss, epoch)
 
             with torch.no_grad():
                 model.eval()
@@ -77,7 +80,7 @@ class LatentTrainer:
 
                 average_val_loss = val_loss / len(val_loader)
                 print(f'Validation Loss: {average_val_loss:.4f}')
-                self.log_scalar(logger, average_val_loss, epoch, data_name = "Val loss")
+                self._log_scalar(logger, average_val_loss, epoch, data_name = "Latent Val loss")
                 model_save_handler.save_model(average_val_loss, model)
 
         with torch.no_grad():
@@ -88,7 +91,7 @@ class LatentTrainer:
                 test_loss = criterion(test_pred, j_test)
             print(f'Test Loss: {test_loss.item():.4f}')
 
-    def _log_scalar(self, logger, loss, epoch, data_name = "Loss", title = "Loss"):
+    def _log_scalar(self, logger, loss, epoch, data_name = "Latent Loss", title = "Loss"):
         logger.report_scalar(title=title, series=data_name, value=loss, iteration=epoch)
 
     def train(self, num_epochs = 100, batch_size = 42):
