@@ -1,0 +1,18 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Neural Audio Coding for Speech Enhancement
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Boldizsár
+    family-names: Elek
+  - given-names: István László
+    family-names: Mádi
+  - given-names: András Bence
+    family-names: Schin
+repository-code: >-
+  https://github.com/madiistvan/Neural-audio-coding-for-speech-enhancement
