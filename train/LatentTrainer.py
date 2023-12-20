@@ -116,5 +116,3 @@ class LatentTrainer:
             torch.save(model.state_dict(), f'./saved_models/{date_string}')
         finally:
             task.close()
-
-

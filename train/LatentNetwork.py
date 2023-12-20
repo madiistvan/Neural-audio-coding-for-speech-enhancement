@@ -39,18 +39,18 @@ class LatentNetwork(nn.Module):
         x = self.activation(self.conv_layer1(x))
         x = self.bn1(x)
 
-        x = self.activation(self.dilated_conv1(x))
+        x = self.dilated_conv1(x)
 
-        residual = self.residual_conv1(self.bn2(x))
+        residual = self.residual_conv1(self.bn2(self.activation(x)))
         x = self.activation(x + residual)
         x = self.residual_bn1(x)
 
         x = self.activation(self.conv_layer4(x))
 
-        x = self.residual_conv2(self.bn4(x))
-        residual = self.residual_bn2(x)
+        residual = self.residual_conv2(self.bn4(x))
         x = self.activation(x + residual)
-        
+        x = self.residual_bn2(x)
+
         x = self.conv_out(x)
         
         return x
