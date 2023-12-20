@@ -54,34 +54,13 @@ class LatentTrainer:
             model.train()
             losses = 0.0
             for noisy, target in train_loader:
-                noisy = noisy.to(device)
-                target = target.to(device)
-                optimizer.zero_grad()
-                
-                pred = model(noisy.squeeze(1))
-                loss = criterion(pred, target.squeeze(1))
-                losses += loss
-                loss.backward()
-                optimizer.step()
+                self.train_step(device, model, optimizer, criterion, losses, noisy, target)
 
-            avg_loss = losses = len(train_loader)
+            avg_loss = losses / len(train_loader)
             print(f'Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {avg_loss:.4f}')
             self._log_scalar(logger, avg_loss, epoch)
 
-            with torch.no_grad():
-                model.eval()
-                val_loss = 0.0
-                for noisy, target in val_loader:
-                    noisy = noisy.to(device)
-                    target = target.to(device)
-                    val_pred = model(noisy.squeeze(1))
-                    target = target.squeeze(1)
-                    val_loss += criterion(val_pred, target)
-
-                average_val_loss = val_loss / len(val_loader)
-                print(f'Validation Loss: {average_val_loss:.4f}')
-                self._log_scalar(logger, average_val_loss, epoch, data_name = "Latent Val loss")
-                model_save_handler.save_model(average_val_loss, model)
+            self.validatio_step(device, model, val_loader, logger, model_save_handler, criterion, epoch)
 
         with torch.no_grad():
             model.eval()
@@ -90,6 +69,33 @@ class LatentTrainer:
                 j_test = j_test.squeeze(1)
                 test_loss = criterion(test_pred, j_test)
             print(f'Test Loss: {test_loss.item():.4f}')
+
+    def validatio_step(self, device, model, val_loader, logger, model_save_handler, criterion, epoch):
+        with torch.no_grad():
+            model.eval()
+            val_loss = 0.0
+            for noisy, target in val_loader:
+                noisy = noisy.to(device)
+                target = target.to(device)
+                val_pred = model(noisy.squeeze(1))
+                target = target.squeeze(1)
+                val_loss += criterion(val_pred, target)
+
+            average_val_loss = val_loss / len(val_loader)
+            print(f'Validation Loss: {average_val_loss:.4f}')
+            self._log_scalar(logger, average_val_loss, epoch, data_name = "Latent Val loss")
+            model_save_handler.save_model(average_val_loss, model)
+
+    def train_step(self, device, model, optimizer, criterion, losses, noisy, target):
+        noisy = noisy.to(device)
+        target = target.to(device)
+        optimizer.zero_grad()
+                
+        pred = model(noisy.squeeze(1))
+        loss = criterion(pred, target.squeeze(1))
+        loss.backward()
+        optimizer.step()
+        losses += loss.item()
 
     def _log_scalar(self, logger, loss, epoch, data_name = "Latent Loss", title = "Loss"):
         logger.report_scalar(title=title, series=data_name, value=loss, iteration=epoch)
@@ -116,3 +122,5 @@ class LatentTrainer:
             torch.save(model.state_dict(), f'./saved_models/{date_string}')
         finally:
             task.close()
+
+
