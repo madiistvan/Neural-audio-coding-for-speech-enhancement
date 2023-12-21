@@ -1,12 +1,12 @@
 import torch
-from EncodedDataset import EncodedDataset
+from preprocessing.EncoderDataset import EncoderDataset
 from torch.utils.data import DataLoader, random_split
-from LatentNetwork import LatentNetwork
+from train.LatentNetwork import LatentNetwork
 import torch.optim as optim
 
 from clearml import Task
 import datetime
-from ModelSaveHandler import ModelSaveHandler
+from train.utils.ModelSaveHandler import ModelSaveHandler
 
 class LatentTrainer:
     def __init__(self, model_dir, data_dir, noise_dir):
@@ -54,7 +54,7 @@ class LatentTrainer:
             model.train()
             losses = 0.0
             for noisy, target in train_loader:
-                self.train_step(device, model, optimizer, criterion, losses, noisy, target)
+                losses = self.train_step(device, model, optimizer, criterion, losses, noisy, target)
 
             avg_loss = losses / len(train_loader)
             print(f'Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {avg_loss:.4f}')
@@ -96,6 +96,7 @@ class LatentTrainer:
         loss.backward()
         optimizer.step()
         losses += loss.item()
+        return losses
 
     def _log_scalar(self, logger, loss, epoch, data_name = "Latent Loss", title = "Loss"):
         logger.report_scalar(title=title, series=data_name, value=loss, iteration=epoch)

@@ -1,10 +1,10 @@
 from models.autoencoder.AudioDec import Encoder
-from preprocessing.EncoderDataset import EncoderDataset 
 import soundfile as sf
 from torch.utils.data import DataLoader
 import os
 import torch
-
+from preprocessing.EncoderDataset import EncoderDataset
+from AudioDec.models.autoencoder.AudioDec import Generator
 class DataEncoder:
     def __init__(
             self,
@@ -18,7 +18,7 @@ class DataEncoder:
         self.encoded_speech_files=encoded_speech_files
         self.encoded_mixed_files=encoded_mixed_files
 
-    def _get_device():
+    def _get_device(self):
         device = (
             "cuda"
             if torch.cuda.is_available()
@@ -29,18 +29,16 @@ class DataEncoder:
         #print(f"Using {device} device")
         return device
 
-    def encode_data(self):
+    def encode_data(self, tx_steps = 700000):
         device = self._get_device()
-        tx_steps = 700000
-        encoder_checkpoint = os.path.join('AudioDec','exp', 'autoencoder', 'symAD_vctk_48000_hop300', f"checkpoint-{tx_steps}steps.pkl")
-
-        encoder = Encoder()
-        encoder.load_state_dict(torch.load(encoder_checkpoint, map_location='cpu')['model']['generator'])
-
+        encoder_checkpoint = os.path.join('./AudioDec','exp', 'autoencoder', 'symAD_vctk_48000_hop300', f"checkpoint-{tx_steps}steps.pkl")
+        generator = Generator()
+        generator.load_state_dict(torch.load(encoder_checkpoint, map_location='cpu')['model']['generator'])
+        encoder = generator.encoder
         encoder.to(device).eval()
 
 
-        training_data = SingleDataset(
+        training_data = EncoderDataset(
             noise_files=self.noise_files,
             speech_files=self.speech_files,
             noise_count=2,
